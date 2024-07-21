@@ -31,31 +31,34 @@ class CovalentHQApi:
     async def assert_inputs(self, chain, wallet):
         assert (chain := chain or self.chain), "Chain is not set for the API call"
         assert (wallet := wallet or self.wallet), "Wallet is set for the API call"
+        assert (chain := str(chain).strip()), "Chain is not set for the API call"
+        assert (wallet := str(wallet).strip()), "Wallet is not set for the API call"
         return chain, wallet
 
     async def list_wallet_chain_tokens(
         self,
         chain: str | None = None,
         wallet: str | None = None,
-    ) -> dict:
+    ) -> list[dict]:
         chain, wallet = await self.assert_inputs(chain, wallet)
         endpoint = self.base_url.child(chain, "address", wallet, "balances_v2", "").to_text()
-        return (
-            (await self.client.get(endpoint)).raise_for_status().json().get("data", {}).get("items")
-        )
+        response = await self.client.get(endpoint)
+        return response.raise_for_status().json().get("data", {}).get("items", [])
 
     async def list_wallet_chain_transactions_paged(
         self,
         chain: str | None = None,
         wallet: str | None = None,
         page: int = 0,
-    ):
+    ) -> list[dict]:
         chain, wallet = await self.assert_inputs(chain, wallet)
         assert (page := str(page)).isnumeric(), "Page is not a number"
         endpoint = self.base_url.child(
             chain, "address", wallet, "transactions_v3", "page", page, ""
         ).to_text()
-        return (await self.client.get(endpoint)).raise_for_status().json()
+        # I didn't get real data sample so I am guessing it will have similar structure $.data.items
+        response = await self.client.get(endpoint)
+        return response.raise_for_status().json().get("data", {}).get("items", [])
 
     async def get_wallet_chain_usd_balance(
         self, chain: str | None = None, wallet: str | None = None, currency: str = "USD"

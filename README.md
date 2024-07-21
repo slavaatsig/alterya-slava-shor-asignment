@@ -6,9 +6,10 @@ Prerequisites:
 * Python 3.12
 * Latest Poetry
 * An `.env` file at root of the project with API key `COVALENTHQ_API_KEY=cqt_wFb*********wqB` or exported as OS env
-  variable
-  Please note, it is advisable to configure Poetry to create virtual
-  environments inside the project:
+  variable (also for unit tests)
+
+Please note, it is advisable to configure Poetry to create virtual
+environments inside the project:
 
 ```shell
 python3.12 -m poetry config virtualenvs.create true

@@ -67,7 +67,9 @@ async def read_wallet_chain_tokens(
 async def read_wallet_chain_transactions_paged(
     wallet: str, chain: str, page: int, covalent: CovalentHQApi = Depends(get_client)
 ):
-    return await covalent.list_wallet_chain_tokens(wallet=wallet, chain=chain, page=page)
+    return await covalent.list_wallet_chain_transactions_paged(
+        wallet=wallet, chain=chain, page=page
+    )
 
 
 @app.get("/v1/wallet/{wallet}/chain/{chain}/balance/{currency}")
