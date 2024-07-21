@@ -11,6 +11,7 @@ python = "^3.12"
 hyperlink = "^21.0.0"
 fastapi = "^0.111.1"
 httpx = "^0.27.0"
+python-dotenv = "^1.0.1"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.1"
