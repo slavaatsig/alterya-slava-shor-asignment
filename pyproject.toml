@@ -1,0 +1,31 @@
+[tool.poetry]
+name = "alterya"
+version = "0.0.0"
+description = "Slava Shor home assignment for Alterya"
+authors = ["Slava Shor <slava.shor.il@gmail.com>"]
+readme = "README.md"
+packages = [{ include = "alterya", from = "src" }]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+hyperlink = "^21.0.0"
+fastapi = "^0.111.1"
+httpx = "^0.27.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.1"
+bump2version = "*"
+pytest-cov = "*"
+pytest-asyncio = "*"
+black = { extras = ["d"], version = "*" }
+
+[tool.black]
+line-length = 100
+target-version = ['py312']
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
