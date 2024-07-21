@@ -28,13 +28,37 @@ class CovalentHQApi:
     async def disconnect(self):
         await self.client.aclose()
 
-    async def list_chain_tokens(
+    async def assert_inputs(self, chain, wallet):
+        assert (chain := chain or self.chain), "Chain is not set for the API call"
+        assert (wallet := wallet or self.wallet), "Wallet is set for the API call"
+        return chain, wallet
+
+    async def list_wallet_chain_tokens(
         self,
         chain: str | None = None,
         wallet: str | None = None,
     ) -> dict:
-        assert (chain := chain or self.chain), "Chain is not set for the API call"
-        assert (wallet := wallet or self.wallet), "Wallet is set for the API call"
-
+        chain, wallet = await self.assert_inputs(chain, wallet)
         endpoint = self.base_url.child(chain, "address", wallet, "balances_v2", "").to_text()
+        return (
+            (await self.client.get(endpoint)).raise_for_status().json().get("data", {}).get("items")
+        )
+
+    async def list_wallet_chain_transactions_paged(
+        self,
+        chain: str | None = None,
+        wallet: str | None = None,
+        page: int = 0,
+    ):
+        chain, wallet = await self.assert_inputs(chain, wallet)
+        assert (page := str(page)).isnumeric(), "Page is not a number"
+        endpoint = self.base_url.child(
+            chain, "address", wallet, "transactions_v3", "page", page, ""
+        ).to_text()
         return (await self.client.get(endpoint)).raise_for_status().json()
+
+    async def get_wallet_chain_usd_balance(
+        self, chain: str | None = None, wallet: str | None = None, currency: str = "USD"
+    ) -> float:
+        items = await self.list_wallet_chain_tokens(chain, wallet)
+        return sum(it.get("quote", 0.0) or 0.0 for it in items)
