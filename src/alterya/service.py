@@ -1,4 +1,5 @@
 import os
+from functools import wraps
 
 import httpx
 from alterya.api import CovalentHQApi
@@ -36,34 +37,37 @@ async def read_version():
     return {"version": "0.0.0"}
 
 
+def handle_exceptions(func):
+    @wraps(func)
+    async def wrapper(*args, **kwargs):
+        try:
+            return await func(*args, **kwargs)
+        except httpx.HTTPStatusError as e:
+            raise HTTPException(
+                status_code=e.response.status_code,
+                detail="Remote service error: Unable to fetch data",
+            )
+        except Exception as e:
+            raise HTTPException(
+                status_code=500, detail="Internal Server Error: Unable to parse data"
+            )
+
+    return wrapper
+
+
 @app.get("/v1/wallet/{wallet}/chain/{chain}/tokens")
+@handle_exceptions
 async def read_wallet_chain_tokens(
     wallet: str, chain: str, covalent: CovalentHQApi = Depends(get_client)
 ):
-    try:
-        return await covalent.list_wallet_chain_tokens(wallet=wallet, chain=chain)
-    except httpx.HTTPStatusError as e:
-        raise HTTPException(
-            status_code=e.response.status_code,
-            detail="Remote service error: Unable to fetch data",
-        )
-    except Exception as _:
-        raise HTTPException(status_code=500, detail="Internal Server Error: Unable to parse data")
+    return await covalent.list_wallet_chain_tokens(wallet=wallet, chain=chain)
 
 
 @app.get("/v1/wallet/{wallet}/chain/{chain}/transactions/{page}")
 async def read_wallet_chain_transactions_paged(
     wallet: str, chain: str, page: int, covalent: CovalentHQApi = Depends(get_client)
 ):
-    try:
-        return await covalent.list_wallet_chain_tokens(wallet=wallet, chain=chain, page=page)
-    except httpx.HTTPStatusError as e:
-        raise HTTPException(
-            status_code=e.response.status_code,
-            detail="Remote service error: Unable to fetch data",
-        )
-    except Exception as _:
-        raise HTTPException(status_code=500, detail="Internal Server Error: Unable to parse data")
+    return await covalent.list_wallet_chain_tokens(wallet=wallet, chain=chain, page=page)
 
 
 @app.get("/v1/wallet/{wallet}/chain/{chain}/balance/{currency}")
@@ -73,13 +77,7 @@ async def read_wallet_chain_usd_balance(
     currency: str,
     covalent: CovalentHQApi = Depends(get_client),
 ):
-    try:
-        assert str(currency).lower() == "usd", "Currently ony USD is supported"
-        return await covalent.get_wallet_chain_usd_balance(wallet=wallet, chain=chain, currency=currency)
-    except httpx.HTTPStatusError as e:
-        raise HTTPException(
-            status_code=e.response.status_code,
-            detail="Remote service error: Unable to fetch data",
-        )
-    except Exception as _:
-        raise HTTPException(status_code=500, detail="Internal Server Error: Unable to parse data")
+    assert str(currency).lower() == "usd", "Currently ony USD is supported"
+    return await covalent.get_wallet_chain_usd_balance(
+        wallet=wallet, chain=chain, currency=currency
+    )
